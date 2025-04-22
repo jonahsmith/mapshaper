@@ -19,13 +19,14 @@ import { copyDatasetForExport, datasetHasPaths, splitDataset, getDatasetBounds }
 import { getOutputFileBase } from '../utils/mapshaper-filename-utils';
 import { message } from '../utils/mapshaper-logging';
 import { getRepairFunction } from '../paths/mapshaper-segment-intersection-repair';
+import { JsonStreamStringify } from 'json-stream-stringify';
 
 TopoJSON.getPresimplifyFunction = getPresimplifyFunction;
 
 export function exportTopoJSON(dataset, opts) {
   var extension = '.' + (opts.extension || 'json'),
       needCopy = !opts.final || datasetHasPaths(dataset) && dataset.arcs.getRetainedInterval() > 0,
-      stringify = JSON.stringify;
+      stringify = (d) => new JsonStreamStringify(d);
 
   if (needCopy) {
     dataset = copyDatasetForExport(dataset);

@@ -60,11 +60,15 @@ cli.createDirIfNeeded = function(fname) {
   }
 };
 
+const isStream = (obj) => obj !== null && typeof obj === 'object' && typeof obj.pipe === 'function';
+
 // content: Buffer or string
 cli.writeFileSync = function(fname, content) {
   cli.createDirIfNeeded(fname);
   if (utils.isString(content)) {
     require('fs').writeFileSync(fname, content);
+  } else if (isStream(content)) {
+    cli.writeStream(fname, content);
   } else {
     // as of Node.js v20, on a typical machine, max buffer size is 4gb but the max
     // write buffer size is 2gb. An error is thrown when writing >2gb and <4gb.
@@ -72,6 +76,19 @@ cli.writeFileSync = function(fname, content) {
     cli.writeFileInChunks(fname, content, 1e7);
   }
 };
+
+cli.writeStream = function(fname, stream) {
+  var fs = require('fs');
+  var deasync = require('deasync');
+
+  const writeSyncFromStream = deasync(function(cb) {
+    var dest = fs.createWriteStream(fname);
+    stream.pipe(dest);
+    stream.on('end', () => cb(null, null));
+  });
+
+  writeSyncFromStream();
+}
 
 cli.writeFileInChunks = function(fname, buffer, chunkSize) {
   var fs = require('fs');

@@ -9,6 +9,9 @@ export function isGzipped(arg) {
 }
 
 export function gzipSync(content, opts) {
+  if (content && content.pipe && typeof content.pipe === 'function') {
+    return content.pipe(require('zlib').createGzip());
+  }
   // TODO: use native module in Node if available
   // require('zlib').
   if (typeof content == 'string') {
